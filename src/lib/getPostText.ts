@@ -12,11 +12,12 @@ const mastodon = new Mastodon.API({access_token: 'PRZhmwmS5fpkXo442UE8SGHv8TL7XO
 */
 export default async function getPostText() 
 {
-	const limitVal = 5; // The number of posts to get from Mastodon.
+	const limitVal = 8; // The number of posts to get from Mastodon.
 	var pReg = new RegExp("</p><p>", "g"); // A regex to deal with <p></p>. This should create a new section in the text, which we do via 2 line breaks.
 	var brReg = new RegExp("<br>", "g"); // A regex to deal with <br>. This should go to the next line, which we do via a line break. 
 	var quoteReg = new RegExp(`\\\\"`, "g"); // A regex to deal with \". This should be replaced with a " value with no \.
 	var andReg = new RegExp("&amp;", "g"); // A regex to deal with &amp;. This should be replaced with &.
+	var logoReg = new RegExp("&nbsp;", "g"); // A regex to deal with &nbsp;. Should be deleted.
 	var tagReg = new RegExp("<(:?[^>]+)>", "g"); // A general regex for HTML. Used to get the plaintext value of the mastodon post without tag notation.
 	var awaitTweet = await mastodon.getStatuses("109705347025889119", {'limit':limitVal}); //Use the Mastodon API to get a specified number of recent posts from the Mastodon API.
 	var string = JSON.stringify(awaitTweet); // Convert the post into a JSON string.
@@ -43,7 +44,7 @@ export default async function getPostText()
 		var contentJSON = objJSON[i]["content"]; // Filter through all the values of the JSON object, to get just the content of post i. 
 		var contentString = JSON.stringify(contentJSON); // Convert the content of the post into a JSON string.
 		contentString = contentString.slice(1,-1); // Remove the quotation marks.
-		contentString = contentString.replace(quoteReg, `"`).replace(andReg, "&").replace(pReg, "\n\n").replace(brReg, "\n").replace(tagReg, ""); //Use the ", &, <p>, and <br> regexes to apply appropriate formatting. Then use the general regex to remove the HTML formatting from the mastodon post. 
+		contentString = contentString.replace(logoReg, "").replace(quoteReg, `"`).replace(andReg, "&").replace(pReg, "\n\n").replace(brReg, "\n").replace(tagReg, ""); //Use the ", &, <p>, and <br> regexes to apply appropriate formatting. Then use the general regex to remove the HTML formatting from the mastodon post. 
 		stringArr.push(contentString); // Add the regexed content to the array of plaintexts.
 	}
 	var urls = urlArr.join("@#%");
