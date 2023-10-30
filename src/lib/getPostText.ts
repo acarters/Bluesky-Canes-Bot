@@ -12,7 +12,7 @@ const mastodon = new Mastodon.API({access_token: 'PRZhmwmS5fpkXo442UE8SGHv8TL7XO
 */
 export default async function getPostText() 
 {
-	const limitVal = 10; // The number of posts to get from Mastodon.
+	const limitVal = 5; // The number of posts to get from Mastodon.
 	var pReg = new RegExp("</p><p>", "g"); // A regex to deal with <p></p>. This should create a new section in the text, which we do via 2 line breaks.
 	var brReg = new RegExp("<br>", "g"); // A regex to deal with <br>. This should go to the next line, which we do via a line break. 
 	var quoteReg = new RegExp(`\\\\"`, "g"); // A regex to deal with \". This should be replaced with a " value with no \.
