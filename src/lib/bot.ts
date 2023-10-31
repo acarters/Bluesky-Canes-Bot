@@ -15,7 +15,8 @@ type BotOptions =
   dryRun: boolean;
 };
 
-export default class Bot {
+export default class Bot 
+{
   #agent; // Private value containing our bluesky agent.
   public rootCid: string; // Public variable in the class to store the CID of the most recent non-reply post, the root we need for replies. 
   public rootUri: string; // Public variable in the class to store the URI of the most recent non-reply post, the root we need for replies. 
@@ -71,7 +72,7 @@ export default class Bot {
   */
   async post
   (
-    isReply: boolean, url: string, text:
+    isReply: boolean, url: string, alt: string, text:
       | string
       | (Partial<AppBskyFeedPost.Record> &
           Omit<AppBskyFeedPost.Record, "createdAt">)
@@ -80,13 +81,17 @@ export default class Bot {
     var img;
     if (url != "None")
     {
-
-      const response = await axios.get(url, { responseType: 'arraybuffer' })
-      const buffer = Buffer.from(response.data, "utf-8")
+      const response = await axios.get(url, { responseType: 'arraybuffer'});
+      const buffer = Buffer.from(response.data, "utf-8");
       if (buffer.length <= 1000000)
       {
         const testUpload = await this.#agent.uploadBlob(buffer, {encoding: "image/png"});
         img = {images: [{image: testUpload["data"]["blob"], alt: "",},], $type: "app.bsky.embed.images",};
+        if (alt != "None")
+        {
+        	img["images"][0]["alt"] = alt;
+        }
+        console.log(img);
       }
     }
 
@@ -204,9 +209,11 @@ export default class Bot {
     await bot.login(bskyAccount); // Log the bot into the specified Bluesky account determined by the bskyAccount value.
     const mastodonAwait = await getPostText(); // Get the desired number of recent Mastodon posts from the specified user in getPostText.
 
-    var urlsAndStringsArr = mastodonAwait.split("~~~");
-    var mastodonArr = urlsAndStringsArr[1].split("@#%");
-    var mastUrlArr = urlsAndStringsArr[0].split("@#%");
+    var urlsStringsAltsArr = mastodonAwait.split("~~~");
+    var mastUrlArr = urlsStringsAltsArr[0].split("@#%");
+    var mastodonArr = urlsStringsAltsArr[1].split("@#%");
+    var mastAltArr = urlsStringsAltsArr[2].split("@#%");
+    console.log(mastAltArr);
 
     if (!dryRun) // Make sure that we don't wanna run the bot without posting. Tbh, I think I might have broken this feature through my changes to the source code. May need to reimplement dry run as a working option when I generalize the code for other purposes.
     { 
@@ -214,7 +221,7 @@ export default class Bot {
       {
         if (mastodonArr[i].length <= 300) // Simple case, where a post is 300 characters or less, within the length bounds of a Bluesky post.
         {
-          await bot.post(false, mastUrlArr[i], mastodonArr[i]); // Run bot.post on this text value, posting to Bluesky if the text is new. Post this as a root value.
+          await bot.post(false, mastUrlArr[i], mastAltArr[i], mastodonArr[i]); // Run bot.post on this text value, posting to Bluesky if the text is new. Post this as a root value.
         }
         else // Complicated case where a post is longer than 300 characters, longer than a valid Bluesky post. 
         {
@@ -243,11 +250,12 @@ export default class Bot {
           var isReply = false; // Create a boolean value to determine if we want to post a root post or a reply. Start with a root post. 
           for (var j = 0; j < threadArr.length; j++) // Iterate over all of the chunk strings contained in the thread array.
           {
-            await bot.post(isReply, mastUrlArr[i], threadArr[j] + " [" + (j+1) + "/" + threadArr.length + "]"); // Post string j in the thread array. Use the boolean variable to determine whether this is a root post or a reply, add a post counter on the end to make the thread easier to read. 
+            await bot.post(isReply, mastUrlArr[i], mastAltArr[i], threadArr[j] + " [" + (j+1) + "/" + threadArr.length + "]"); // Post string j in the thread array. Use the boolean variable to determine whether this is a root post or a reply, add a post counter on the end to make the thread easier to read. 
             if (isReply == false) // If this post was posted as a root, meaning that this is the first iteration:
             {
               isReply = true; // Set the boolean value to post as replies for the remaining iterations.
               mastUrlArr[i] = "None";
+              mastAltArr[i] = "None";
             }
           }
         }
