@@ -79,6 +79,7 @@ export default class Bot
   ) 
   {
     var img;
+    console.log(alt);
     if (url != "None")
     {
       const response = await axios.get(url, { responseType: 'arraybuffer'});
@@ -91,7 +92,7 @@ export default class Bot
         {
         	img["images"][0]["alt"] = alt;
         }
-        console.log(img);
+        // console.log(img);
       }
     }
 
@@ -122,8 +123,8 @@ export default class Bot
       var bskyPost = bskyFeed[i]; // Get the post i from the collected Bluesky feed.
       var bskyRecord = bskyPost["post"]["record"]; // Filter post i down so we are only considering the record.
       var bskyText = Object.entries(bskyRecord)[0][1]; // Accessing the values from here is weird, so I put them all in an array and access the one corresponding to text (0,1).
-      console.log(text);
-      console.log(bskyText);
+      // console.log(text);
+      // console.log(bskyText);
       if (text === bskyText || text === "") // Check if the text we are trying to post has already been posted in the last postNum posts, or is empty. Might change empty conditional if I get images working.  
       {
         console.log("failed on case " + i);

@@ -18,6 +18,8 @@ export default async function getPostText()
 	var quoteReg = new RegExp(`\\\\"`, "g"); // A regex to deal with \". This should be replaced with a " value with no \.
 	var andReg = new RegExp("&amp;", "g"); // A regex to deal with &amp;. This should be replaced with &.
 	var logoReg = new RegExp("&nbsp;", "g"); // A regex to deal with &nbsp;. Should be deleted.
+	var twitterReg = new RegExp("@twitter.com", "g"); // A regex to deal with @twitter.com. Should be deleted.
+	var waltRuffReg = new RegExp("@WaltRuff.sportsbots.xyz", "g"); // A regex to deal with Walt Ruff's @. Should be replaced with the bot's @.
 	var tagReg = new RegExp("<(:?[^>]+)>", "g"); // A general regex for HTML. Used to get the plaintext value of the mastodon post without tag notation.
 	var awaitTweet = await mastodon.getStatuses("109705347025889119", {'limit':limitVal}); //Use the Mastodon API to get a specified number of recent posts from the Mastodon API.
 	var string = JSON.stringify(awaitTweet); // Convert the post into a JSON string.
@@ -41,13 +43,22 @@ export default async function getPostText()
 			{
 				urlArr.push("None");
 			}
-			if (objJSON[i]["media_attachments"][0]["description"] == null)
+
+			if (objJSON[i]["media_attachments"][0]["type"] == "gifv")
+			{
+				altTextArr.push("This is a thumbnail from an animated GIF on Twitter, because Bluesky does not currently have GIF support.")
+			}
+			else if (objJSON[i]["media_attachments"][0]["type"] == "video")
+			{
+				altTextArr.push("This is a thumbnail from a video on Twitter, because Bluesky does not currently have video support.")
+			}
+			else if (objJSON[i]["media_attachments"][0]["description"] == null)
 			{
 				altTextArr.push("None");
 			}
 			else
 			{
-				altTextArr.push(objJSON[i]["media_attachments"][0]["description"])
+				altTextArr.push(objJSON[i]["media_attachments"][0]["description"]);
 			}
 		}
 		else
@@ -58,8 +69,8 @@ export default async function getPostText()
 		var contentJSON = objJSON[i]["content"]; // Filter through all the values of the JSON object, to get just the content of post i. 
 		var contentString = JSON.stringify(contentJSON); // Convert the content of the post into a JSON string.
 		contentString = contentString.slice(1,-1); // Remove the quotation marks.
-		contentString = contentString.replace(logoReg, "").replace(quoteReg, `"`).replace(andReg, "&").replace(pReg, "\n\n").replace(brReg, "\n").replace(tagReg, ""); //Use the ", &, <p>, and <br> regexes to apply appropriate formatting. Then use the general regex to remove the HTML formatting from the mastodon post. 
-		if (contentString.includes("GreatClips") || contentString.includes("RT ") || contentString.includes("Retweet ") || contentString.includes("retweet ") || contentString.includes("RETWEET "))
+		contentString = contentString.replace(twitterReg, "").replace(waltRuffReg, "notwaltruff.bsky.social").replace(logoReg, "").replace(quoteReg, `"`).replace(andReg, "&").replace(pReg, "\n\n").replace(brReg, "\n").replace(tagReg, ""); //Use the ", &, <p>, and <br> regexes to apply appropriate formatting. Then use the general regex to remove the HTML formatting from the mastodon post. 
+		if (contentString.includes("GreatClips") || contentString.includes("HarrisTeeter") || contentString.includes("RT ") || contentString.includes("Retweet ") || contentString.includes("retweet ") || contentString.includes("RETWEET "))
 		{
 			contentString = contentString + "\n\n (Offer not valid on Bluesky.)";
 		}
@@ -68,6 +79,7 @@ export default async function getPostText()
 	var urls = urlArr.join("@#%");
 	var strings = stringArr.join("@#%"); // Turn the string array into a single string by joining them with a \/ delimiter. This will be undone when used by bot functions. 
 	var alts = altTextArr.join("@#%"); 
+	console.log("alts: " + alts);
 	var urlsStringsAltsArr = [urls, strings, alts];
 	var urlsStringsAlts = urlsStringsAltsArr.join("~~~");
 	return urlsStringsAlts; // Return this singular concatenated string. 
