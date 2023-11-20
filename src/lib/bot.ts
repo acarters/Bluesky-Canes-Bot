@@ -79,20 +79,32 @@ export default class Bot
   ) 
   {
     var img;
-    console.log(alt);
-    if (url != "None")
+
+    var urls = url.split("!^&");
+    var alts = alt.split("!^&");
+
+    for (var i = 0; i < 4; i++)
     {
-      const response = await axios.get(url, { responseType: 'arraybuffer'});
-      const buffer = Buffer.from(response.data, "utf-8");
-      if (buffer.length <= 1000000)
+      if (urls[i] != "None")
       {
-        const testUpload = await this.#agent.uploadBlob(buffer, {encoding: "image/png"});
-        img = {images: [{image: testUpload["data"]["blob"], alt: "",},], $type: "app.bsky.embed.images",};
-        if (alt != "None")
+        const response = await axios.get(urls[i], { responseType: 'arraybuffer'});
+        const buffer = Buffer.from(response.data, "utf-8");
+        if (buffer.length <= 1000000)
         {
-        	img["images"][0]["alt"] = alt;
+          const upload = await this.#agent.uploadBlob(buffer, {encoding: "image/png"});
+          if (img == undefined)
+          {
+            img = {images: [{image: upload["data"]["blob"], alt: "",},], $type: "app.bsky.embed.images",};
+          }
+          else 
+          {
+            img["images"][i] = {image: upload["data"]["blob"], alt: "",};
+          }
+          if (alts[i] != "None")
+          {
+            img["images"][i]["alt"] = alts[i];
+          }
         }
-        // console.log(img);
       }
     }
 
@@ -123,8 +135,6 @@ export default class Bot
       var bskyPost = bskyFeed[i]; // Get the post i from the collected Bluesky feed.
       var bskyRecord = bskyPost["post"]["record"]; // Filter post i down so we are only considering the record.
       var bskyText = Object.entries(bskyRecord)[0][1]; // Accessing the values from here is weird, so I put them all in an array and access the one corresponding to text (0,1).
-      // console.log(text);
-      // console.log(bskyText);
       if (text === bskyText || text === "") // Check if the text we are trying to post has already been posted in the last postNum posts, or is empty. Might change empty conditional if I get images working.  
       {
         console.log("failed on case " + i);
@@ -214,7 +224,6 @@ export default class Bot
     var mastUrlArr = urlsStringsAltsArr[0].split("@#%");
     var mastodonArr = urlsStringsAltsArr[1].split("@#%");
     var mastAltArr = urlsStringsAltsArr[2].split("@#%");
-    console.log(mastAltArr);
 
     if (!dryRun) // Make sure that we don't wanna run the bot without posting. Tbh, I think I might have broken this feature through my changes to the source code. May need to reimplement dry run as a working option when I generalize the code for other purposes.
     { 
