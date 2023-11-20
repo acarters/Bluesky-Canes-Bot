@@ -94,15 +94,25 @@ export default class Bot
           const upload = await this.#agent.uploadBlob(buffer, {encoding: "image/png"});
           if (img == undefined)
           {
-            img = {images: [{image: upload["data"]["blob"], alt: "",},], $type: "app.bsky.embed.images",};
+            if (alts[i] != "None")
+            {
+              img = {images: [{image: upload["data"]["blob"], alt: alts[i],},], $type: "app.bsky.embed.images",};
+            }
+            else
+            {
+              img = {images: [{image: upload["data"]["blob"], alt: "",},], $type: "app.bsky.embed.images",};
+            }
           }
           else 
           {
-            img["images"][i] = {image: upload["data"]["blob"], alt: "",};
-          }
-          if (alts[i] != "None")
-          {
-            img["images"][i]["alt"] = alts[i];
+            if (alts[i] != "None")
+            {
+              img["images"].push({image: upload["data"]["blob"], alt: alts[i],});
+            }
+            else
+            {
+              img["images"].push({image: upload["data"]["blob"], alt: "",});
+            }
           }
         }
       }
