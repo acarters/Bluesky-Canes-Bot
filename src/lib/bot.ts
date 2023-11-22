@@ -82,8 +82,6 @@ export default class Bot
 
     var urls = url.split("!^&");
     var alts = alt.split("!^&");
-    console.log("urls:");
-    console.log(urls);
 
     for (var i = 0; i < 4; i++)
     {

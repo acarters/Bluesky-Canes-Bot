@@ -23,6 +23,9 @@ export default async function getPostText()
 	var waltRuffReg = new RegExp("@WaltRuff@sportsbots.xyz", "g"); // A regex to deal with Walt Ruff's @. Should be replaced with the bot's @.
 	var sportsBotsReg = new RegExp("@sportsbots.xyz", "g");
 	var tagReg = new RegExp("<(:?[^>]+)>", "g"); // A general regex for HTML. Used to get the plaintext value of the mastodon post without tag notation.
+	var invalidLinkReg = new RegExp("\\S*\\.com\\S*…", "g");
+
+	// var invalidLinkReg = new RegExp("\\S*\.com\S*…\\S*", "g");
 	var awaitTweet = await mastodon.getStatuses("109705347025889119", {'limit':limitVal}); //Use the Mastodon API to get a specified number of recent posts from the Mastodon API.
 	var string = JSON.stringify(awaitTweet); // Convert the post into a JSON string.
 	var objJSON = JSON.parse(string)["json"]; // Convert the JSON string back to a JSON object. Kinda silly, but it doesn't work otherwise. 
@@ -31,6 +34,8 @@ export default async function getPostText()
 	var altTextArr = [];
 	for (let i = 0; i < limitVal; i++) // Iterate over all the posts we collected using the Mastodon API. 
 	{
+	console.log("i = " + i);
+
 	var postUrlArr = [];
 	var postAltTextArr = [];
 		for (let j = 0; j < 4; j++)
@@ -81,10 +86,22 @@ export default async function getPostText()
 		var contentString = JSON.stringify(contentJSON); // Convert the content of the post into a JSON string.
 		contentString = contentString.slice(1,-1); // Remove the quotation marks.
 		contentString = contentString.replace(twitterReg, "").replace(waltRuffReg, "notwaltruff.bsky.social").replace(sportsBotsReg, "").replace(logoReg, "").replace(quoteReg, `"`).replace(andReg, "&").replace(pReg, "\n\n").replace(brReg, "\n").replace(tagReg, ""); //Use the ", &, <p>, and <br> regexes to apply appropriate formatting. Then use the general regex to remove the HTML formatting from the mastodon post. 
+
 		if (contentString.includes("GreatClips") || contentString.includes("HarrisTeeter") || contentString.includes("RT ") || contentString.includes("Retweet ") || contentString.includes("retweet ") || contentString.includes("RETWEET "))
 		{
 			contentString = contentString + "\n\n (Offer not valid on Bluesky.)";
 		}
+
+		if (objJSON[i]["card"] != null)
+		{
+			contentString = contentString.replace(invalidLinkReg, objJSON[i]["card"]["url"]);
+			console.log(objJSON[i]["card"]["url"]);
+		}
+		else
+		{
+			console.log("no link card");	
+		}
+		console.log(contentString);
 		stringArr.push(contentString); // Add the regexed content to the array of plaintexts.
 	}
 	var urls = urlArr.join("@#%");
