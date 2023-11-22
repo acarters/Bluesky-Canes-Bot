@@ -39,11 +39,11 @@ export default async function getPostText()
 			{
 				if (objJSON[i]["media_attachments"][j]["type"] == "image")
 				{
-					postUrlArr.push(objJSON[i]["media_attachments"][0]["url"]);
+					postUrlArr.push(objJSON[i]["media_attachments"][j]["url"]);
 				}
 				else if (objJSON[i]["media_attachments"][j]["type"] == "gifv" || objJSON[i]["media_attachments"][j]["type"] == "video")
 				{
-					postUrlArr.push(objJSON[i]["media_attachments"][0]["preview_url"]);
+					postUrlArr.push(objJSON[i]["media_attachments"][j]["preview_url"]);
 				}
 				else
 				{

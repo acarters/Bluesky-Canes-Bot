@@ -82,13 +82,15 @@ export default class Bot
 
     var urls = url.split("!^&");
     var alts = alt.split("!^&");
+    console.log("urls:");
+    console.log(urls);
 
     for (var i = 0; i < 4; i++)
     {
       if (urls[i] != "None")
       {
-        const response = await axios.get(urls[i], { responseType: 'arraybuffer'});
-        const buffer = Buffer.from(response.data, "utf-8");
+        var response = await axios.get(urls[i], { responseType: 'arraybuffer'});
+        var buffer = Buffer.from(response.data, "utf-8");
         if (buffer.length <= 1000000)
         {
           const upload = await this.#agent.uploadBlob(buffer, {encoding: "image/png"});
