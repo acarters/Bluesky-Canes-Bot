@@ -12,7 +12,7 @@ const mastodon = new Mastodon.API({access_token: 'PRZhmwmS5fpkXo442UE8SGHv8TL7XO
 */
 export default async function getPostText() 
 {
-	const limitVal = 15; // The number of posts to get from Mastodon.
+	const limitVal = 30; // The number of posts to get from Mastodon.
 	var pReg = new RegExp("</p><p>", "g"); // A regex to deal with <p></p>. This should create a new section in the text, which we do via 2 line breaks.
 	var brReg = new RegExp("<br>", "g"); // A regex to deal with <br>. This should go to the next line, which we do via a line break. 
 	var quoteReg = new RegExp(`\\\\"`, "g"); // A regex to deal with \". This should be replaced with a " value with no \.
@@ -23,18 +23,17 @@ export default async function getPostText()
 	var waltRuffReg = new RegExp("@WaltRuff@sportsbots.xyz", "g"); // A regex to deal with Walt Ruff's @. Should be replaced with the bot's @.
 	var sportsBotsReg = new RegExp("@sportsbots.xyz", "g");
 	var tagReg = new RegExp("<(:?[^>]+)>", "g"); // A general regex for HTML. Used to get the plaintext value of the mastodon post without tag notation.
-	var invalidLinkReg = new RegExp("\\S*\\.com\\S*…", "g");
+	var invalidLinkReg = new RegExp("\\S*(\\.com|\\.ca|\\.org|\\.net)\\S*(…|\\.\\.\\.)", "g");
 
-	// var invalidLinkReg = new RegExp("\\S*\.com\S*…\\S*", "g");
 	var awaitTweet = await mastodon.getStatuses("109705347025889119", {'limit':limitVal}); //Use the Mastodon API to get a specified number of recent posts from the Mastodon API.
 	var string = JSON.stringify(awaitTweet); // Convert the post into a JSON string.
 	var objJSON = JSON.parse(string)["json"]; // Convert the JSON string back to a JSON object. Kinda silly, but it doesn't work otherwise. 
 	var stringArr = []; // Initialize an empty array that we will store the regexed plaintexts in.
 	var urlArr = [];
 	var altTextArr = [];
+	var cardArr = [];
 	for (let i = 0; i < limitVal; i++) // Iterate over all the posts we collected using the Mastodon API. 
 	{
-	console.log("i = " + i);
 
 	var postUrlArr = [];
 	var postAltTextArr = [];
@@ -95,19 +94,28 @@ export default async function getPostText()
 		if (objJSON[i]["card"] != null)
 		{
 			contentString = contentString.replace(invalidLinkReg, objJSON[i]["card"]["url"]);
-			console.log(objJSON[i]["card"]["url"]);
+			var postCardArr = [];
+			postCardArr.push(objJSON[i]["card"]["url"]);
+			postCardArr.push(objJSON[i]["card"]["title"]);
+			postCardArr.push(objJSON[i]["card"]["description"]);
+			postCardArr.push(objJSON[i]["card"]["image"]);
+			var postCard = postCardArr.join("!^&");
+			cardArr.push(postCard);
 		}
 		else
 		{
-			console.log("no link card");	
+			cardArr.push("None");
 		}
-		console.log(contentString);
 		stringArr.push(contentString); // Add the regexed content to the array of plaintexts.
 	}
+	//urlArr[27] = "None!^&None!^&None!^&None";
+	//altTextArr[27] = "None!^&None!^&None!^&None";
+
 	var urls = urlArr.join("@#%");
 	var strings = stringArr.join("@#%"); // Turn the string array into a single string by joining them with a \/ delimiter. This will be undone when used by bot functions. 
 	var alts = altTextArr.join("@#%"); 
-	var urlsStringsAltsArr = [urls, strings, alts];
-	var urlsStringsAlts = urlsStringsAltsArr.join("~~~");
-	return urlsStringsAlts; // Return this singular concatenated string. 
+	var cards = cardArr.join("@#%");
+	var urlsStringsAltsCardsArr = [urls, strings, alts, cards];
+	var urlsStringsAltsCards = urlsStringsAltsCardsArr.join("~~~");
+	return urlsStringsAltsCards; // Return this singular concatenated string. 
 }
