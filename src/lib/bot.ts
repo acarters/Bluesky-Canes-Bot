@@ -135,7 +135,7 @@ export default class Bot
       }
     }
 
-    var postNum = 35; // Specify the number of recent posts to compare from the logged in user's feed.
+    var postNum = 20; // Specify the number of recent posts to compare from the logged in user's feed.
     var bskyFeedAwait = await this.#agent.getAuthorFeed({actor: "notcanes.bsky.social", limit: postNum,}); // Get a defined number + 2 of most recent posts from the logged in user's feed.
     var bskyFeed = bskyFeedAwait["data"]["feed"]; // Filter down the await values so we are only looking at the feeds.
     var bskyFeed0 = bskyFeed[0]; // Select post 0, the most recent post made by this user.
