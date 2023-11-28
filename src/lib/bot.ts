@@ -273,11 +273,11 @@ export default class Bot
     await bot.login(bskyAccount); // Log the bot into the specified Bluesky account determined by the bskyAccount value.
     const mastodonAwait = await getPostText(); // Get the desired number of recent Mastodon posts from the specified user in getPostText.
 
-    var urlsStringsAltsArr = mastodonAwait.split("~~~");
-    var mastUrlArr = urlsStringsAltsArr[0].split("@#%");
-    var mastodonArr = urlsStringsAltsArr[1].split("@#%");
-    var mastAltArr = urlsStringsAltsArr[2].split("@#%");
-    var mastCardArr = urlsStringsAltsArr[3].split("@#%");
+    var urlsStringsAltsCardsArr = mastodonAwait.split("~~~");
+    var mastUrlArr = urlsStringsAltsCardsArr[0].split("@#%");
+    var mastodonArr = urlsStringsAltsCardsArr[1].split("@#%");
+    var mastAltArr = urlsStringsAltsCardsArr[2].split("@#%");
+    var mastCardArr = urlsStringsAltsCardsArr[3].split("@#%");
 
     if (!dryRun) // Make sure that we don't wanna run the bot without posting. Tbh, I think I might have broken this feature through my changes to the source code. May need to reimplement dry run as a working option when I generalize the code for other purposes.
     { 
@@ -318,9 +318,8 @@ export default class Bot
             if (isReply == false) // If this post was posted as a root, meaning that this is the first iteration:
             {
               isReply = true; // Set the boolean value to post as replies for the remaining iterations.
-              mastUrlArr[i] = "None";
-              mastAltArr[i] = "None";
-              mastCardArr[i] = "None";
+              mastUrlArr[i] = "None!^&None!^&None!^&None";
+              mastAltArr[i] = "None!^&None!^&None!^&None";
             }
           }
         }

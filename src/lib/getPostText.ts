@@ -34,9 +34,8 @@ export default async function getPostText()
 	var cardArr = [];
 	for (let i = 0; i < limitVal; i++) // Iterate over all the posts we collected using the Mastodon API. 
 	{
-
-	var postUrlArr = [];
-	var postAltTextArr = [];
+		var postUrlArr = [];
+		var postAltTextArr = [];
 		for (let j = 0; j < 4; j++)
 		{	
 			if (objJSON[i]["media_attachments"][j] != undefined)
