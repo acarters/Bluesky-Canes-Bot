@@ -282,11 +282,16 @@ export default class Bot
 
     if (!dryRun) // Make sure that we don't wanna run the bot without posting. Tbh, I think I might have broken this feature through my changes to the source code. May need to reimplement dry run as a working option when I generalize the code for other purposes.
     { 
+      var postCount = 0; // Variable to keep track of how many successful posts occurred.
       for (let i = mastodonArr.length - 1; i >= 0; i--) // Iterate over the recent Mastodon posts in reverse sequential order. -1 may not be necessary, do some more testing.
       {
         if (mastodonArr[i].length <= 300) // Simple case, where a post is 300 characters or less, within the length bounds of a Bluesky post.
         {
-          await bot.post(false, mastUrlArr[i], mastAltArr[i], mastCardArr[i], mastodonArr[i]); // Run bot.post on this text value, posting to Bluesky if the text is new. Post this as a root value.
+          var postVal = await bot.post(false, mastUrlArr[i], mastAltArr[i], mastCardArr[i], mastodonArr[i]); // Run bot.post on this text value, posting to Bluesky if the text is new. Post this as a root value. // Run bot.post on this text value, posting to Bluesky if the text is new. Post this as a root value.
+          if (Number(postVal) != 37)
+          {
+            postCount++;
+          }
         }
         else // Complicated case where a post is longer than 300 characters, longer than a valid Bluesky post. 
         {
@@ -315,7 +320,11 @@ export default class Bot
           var isReply = false; // Create a boolean value to determine if we want to post a root post or a reply. Start with a root post. 
           for (var j = 0; j < threadArr.length; j++) // Iterate over all of the chunk strings contained in the thread array.
           {
-            await bot.post(isReply, mastUrlArr[i], mastAltArr[i], mastCardArr[i], threadArr[j] + " [" + (j+1) + "/" + threadArr.length + "]"); // Post string j in the thread array. Use the boolean variable to determine whether this is a root post or a reply, add a post counter on the end to make the thread easier to read. 
+            var postVal = await bot.post(isReply, mastUrlArr[i], mastAltArr[i], mastCardArr[i], threadArr[j] + " [" + (j+1) + "/" + threadArr.length + "]"); // Post string j in the thread array. Use the boolean variable to determine whether this is a root post or a reply, add a post counter on the end to make the thread easier to read. 
+            if (Number(postVal) != 37)
+            {
+              postCount++;
+            }
             if (isReply == false) // If this post was posted as a root, meaning that this is the first iteration:
             {
               isReply = true; // Set the boolean value to post as replies for the remaining iterations.
@@ -324,6 +333,10 @@ export default class Bot
             }
           }
         }
+      }
+      if (postCount == mastodonArr.length)
+      {
+        await bot.post(false, "None!^&None!^&None!^&None", "None!^&None!^&None!^&None", "None", "ERROR: Repost Detection Glitch.");
       }
     }
     return; // Return void, we're done. 
