@@ -40,26 +40,18 @@ export default async function getPostText()
 		{	
 			if (objJSON[i]["media_attachments"][j] != undefined)
 			{
-				if (objJSON[i]["media_attachments"][j]["type"] == "image")
+				if (objJSON[i]["media_attachments"][j]["type"] == "image" || objJSON[i]["media_attachments"][j]["type"] == "gifv" || objJSON[i]["media_attachments"][j]["type"] == "video")
 				{
 					postUrlArr.push(objJSON[i]["media_attachments"][j]["url"]);
-				}
-				else if (objJSON[i]["media_attachments"][j]["type"] == "gifv" || objJSON[i]["media_attachments"][j]["type"] == "video")
-				{
-					postUrlArr.push(objJSON[i]["media_attachments"][j]["preview_url"]);
 				}
 				else
 				{
 					postUrlArr.push("None");
 				}
 
-				if (objJSON[i]["media_attachments"][j]["type"] == "gifv")
+				if (objJSON[i]["media_attachments"][j]["type"] == "video" || objJSON[i]["media_attachments"][j]["type"] == "gifv")
 				{
-					postAltTextArr.push("This is a thumbnail from an animated GIF on Twitter, because Bluesky does not currently have GIF support.")
-				}
-				else if (objJSON[i]["media_attachments"][j]["type"] == "video")
-				{
-					postAltTextArr.push("This is a thumbnail from a video on Twitter, because Bluesky does not currently have video support.")
+					postAltTextArr.push(`${objJSON[i]["media_attachments"][j]["meta"]["original"]["width"]}@#*${objJSON[i]["media_attachments"][j]["meta"]["original"]["height"]}@#*${objJSON[i]["media_attachments"][j]["meta"]["original"]["duration"]}@#*${objJSON[i]["media_attachments"][j]["preview_url"]}`);
 				}
 				else if (objJSON[i]["media_attachments"][j]["description"] == null)
 				{

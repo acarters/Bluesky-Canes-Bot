@@ -34,7 +34,7 @@
     "typescript": "^5.0.4"
   },
   "dependencies": {
-    "@atproto/api": "^0.2.11",
+    "@atproto/api": "^0.13.12",
     "axios": "^1.6.0",
     "node-html-parser": "^6.1.10",
     "tsl-mastodon-api": "^0.4.1",
