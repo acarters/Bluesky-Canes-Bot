@@ -60,7 +60,7 @@ export default class Bot
   */
   async login(loginOpts: AtpAgentLoginOpts) 
   {
-    await this.userAgent.login({identifier: "notcanes.bsky.social", password: "4dmk-o7r3-bjhc-faie",});
+    await this.userAgent.login(loginOpts);
     return this.#agent.login(loginOpts); // Login to Bluesky using the specified login details. Allows us to access Bluesky via the account we are logging in.
   }
 
