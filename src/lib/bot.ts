@@ -1,4 +1,4 @@
-import { bskyAccount, bskyService } from "./config.js";
+import { bskyAccount, bskyService, alternateCardImage } from "./config.js";
 import type {
   AtpAgentLoginOpts,
   AtpAgentOptions,
@@ -81,7 +81,7 @@ export default class Bot
   ): Promise<void> {
 
     var postNum = 20; // Specify the number of recent posts to compare from the logged in user's feed.
-    var bskyFeedAwait = await this.userAgent.app.bsky.feed.getAuthorFeed({actor: "notcanes.bsky.social", limit: postNum,}); // Get a defined number + 2 of most recent posts from the logged in user's feed.
+    var bskyFeedAwait = await this.userAgent.app.bsky.feed.getAuthorFeed({actor: bskyAccount.identifier, limit: postNum,}); // Get a defined number + 2 of most recent posts from the logged in user's feed.
     var bskyFeed = bskyFeedAwait["data"]["feed"]; // Filter down the await values so we are only looking at the feeds.
     for (let i = 0; i < bskyFeed.length; i++) // Consider all collected posts.
       {
@@ -172,8 +172,11 @@ export default class Bot
           if (cardBuffer.length > 1000000)
           {
             console.log("file too big");
-            cardResponse = await axios.get("https://www.wnct.com/wp-content/uploads/sites/99/2022/12/Hurricanes-Stadium-Series-Logo.png", { responseType: 'arraybuffer'}); 
-            cardBuffer = Buffer.from(cardResponse.data, "utf-8");
+            if (alternateCardImage)
+            {
+              cardResponse = await axios.get(alternateCardImage, { responseType: 'arraybuffer'});
+              cardBuffer = Buffer.from(cardResponse.data, "utf-8");
+            }
           }
           const cardUpload = await this.userAgent.com.atproto.repo.uploadBlob(cardBuffer, {encoding: "image/png"});
           var cardObj = {"uri": cards[0], "title": cards[1], "description": cards[2], "thumb": cardUpload["data"]["blob"],};
@@ -216,7 +219,7 @@ export default class Bot
       }
 
       var postNum = 20; // Specify the number of recent posts to compare from the logged in user's feed.
-      var bskyFeedAwait = await this.userAgent.app.bsky.feed.getAuthorFeed({actor: "notcanes.bsky.social", limit: postNum,}); // Get a defined number + 2 of most recent posts from the logged in user's feed.
+      var bskyFeedAwait = await this.userAgent.app.bsky.feed.getAuthorFeed({actor: bskyAccount.identifier, limit: postNum,}); // Get a defined number + 2 of most recent posts from the logged in user's feed.
       var bskyFeed = bskyFeedAwait["data"]["feed"]; // Filter down the await values so we are only looking at the feeds.
       var bskyFeed0 = bskyFeed[0]; // Select post 0, the most recent post made by this user.
       var bskyPost0 = bskyFeed0["post"]; // Filter down the values of the post so we can look at the params.
