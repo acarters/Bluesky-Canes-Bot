@@ -18,8 +18,7 @@ type BotOptions =
 
 export default class Bot 
 {
-  #agent; // Private value containing our bluesky agent.
-  userAgent;
+  userAgent; // Private value containing our bluesky agent.
 
   public rootCid: string; // Public variable in the class to store the CID of the most recent non-reply post, the root we need for replies. 
   public rootUri: string; // Public variable in the class to store the URI of the most recent non-reply post, the root we need for replies. 
@@ -42,8 +41,7 @@ export default class Bot
   */
   constructor(service: AtpAgentOptions["service"]) 
   {
-    this.#agent = new BskyAgent({service}); // Initialize the Bluesky agent on the specified service. Allows us to interface with the Bluesky API.
-    this.userAgent = new AtpAgent({service: "https://bsky.social"});
+    this.userAgent = new AtpAgent({service: "https://bsky.social"}); // Initialize the Bluesky agent on the specified service. Allows us to interface with the Bluesky API.
     this.rootCid = ""; // Initialize the root CID as the empty string. Only define this as a value when attempting to post a reply.
     this.rootUri = ""; // Initialize the root URI as the empty string. Only define this as a value when attempting to post a reply.
   }
@@ -60,8 +58,7 @@ export default class Bot
   */
   async login(loginOpts: AtpAgentLoginOpts) 
   {
-    await this.userAgent.login(loginOpts);
-    return this.#agent.login(loginOpts); // Login to Bluesky using the specified login details. Allows us to access Bluesky via the account we are logging in.
+    await this.userAgent.login(loginOpts); // Login to Bluesky using the specified login details. Allows us to access Bluesky via the account we are logging in.
   }
 
   /*
@@ -82,10 +79,9 @@ export default class Bot
     alt: string,
     text: string | (Partial<AppBskyFeedPost.Record> & Omit<AppBskyFeedPost.Record, "createdAt">)
   ): Promise<void> {
-    console.log("This is a video. Handle it special");
 
     var postNum = 20; // Specify the number of recent posts to compare from the logged in user's feed.
-    var bskyFeedAwait = await this.#agent.getAuthorFeed({actor: "notcanes.bsky.social", limit: postNum,}); // Get a defined number + 2 of most recent posts from the logged in user's feed.
+    var bskyFeedAwait = await this.userAgent.app.bsky.feed.getAuthorFeed({actor: "notcanes.bsky.social", limit: postNum,}); // Get a defined number + 2 of most recent posts from the logged in user's feed.
     var bskyFeed = bskyFeedAwait["data"]["feed"]; // Filter down the await values so we are only looking at the feeds.
     for (let i = 0; i < bskyFeed.length; i++) // Consider all collected posts.
       {
@@ -101,7 +97,6 @@ export default class Bot
       }
 
     var metadataArr = alt.split("@#*");
-    console.log(metadataArr);
     
     // Fetch the video as a buffer
     const videoResponse = await axios.get(url, { responseType: 'arraybuffer' });
@@ -127,7 +122,6 @@ export default class Bot
         aspectRatio: {width: parseInt(metadataArr[0]), height: parseInt(metadataArr[1]),}
       },
     });
-    console.log(data);
     }
 
   }
@@ -146,13 +140,11 @@ export default class Bot
     var cards = card.split("!^&");
     var cardEmbed;
 
-    console.log(urls[0])
     const { data: serviceAuth } = await this.userAgent.com.atproto.server.getServiceAuth({aud: 'did:web:video.bsky.app', lxm: 'app.bsky.video.getUploadLimits', exp: Date.now() / 1000 + 60 * 30,},);
     const token = serviceAuth.token;
     const limitsUrl = 'https://video.bsky.app/xrpc/app.bsky.video.getUploadLimits'; 
     const limitsResponse = await axios.get(limitsUrl, {headers: {'Authorization': `Bearer ${token}`}});
     const limits = limitsResponse.data;
-    console.log(alts[0]);
 
     if (urls[0].slice(-3) == "mp4" && parseFloat(alts[0].split("@#*")[2]) < 60 && limits.canUpload == true)
     {
@@ -183,7 +175,7 @@ export default class Bot
             cardResponse = await axios.get("https://www.wnct.com/wp-content/uploads/sites/99/2022/12/Hurricanes-Stadium-Series-Logo.png", { responseType: 'arraybuffer'}); 
             cardBuffer = Buffer.from(cardResponse.data, "utf-8");
           }
-          const cardUpload = await this.#agent.uploadBlob(cardBuffer, {encoding: "image/png"});
+          const cardUpload = await this.userAgent.com.atproto.repo.uploadBlob(cardBuffer, {encoding: "image/png"});
           var cardObj = {"uri": cards[0], "title": cards[1], "description": cards[2], "thumb": cardUpload["data"]["blob"],};
           cardEmbed = {"$type": "app.bsky.embed.external", "external": cardObj};
       }
@@ -196,7 +188,7 @@ export default class Bot
           var buffer = Buffer.from(response.data, "utf-8");
           if (buffer.length <= 1000000)
           {
-            const upload = await this.#agent.uploadBlob(buffer, {encoding: "image/png"});
+            const upload = await this.userAgent.com.atproto.repo.uploadBlob(buffer, {encoding: "image/png"});
             if (img == undefined)
             {
               if (alts[i] != "None")
@@ -220,12 +212,11 @@ export default class Bot
               }
             }
           }
-         // console.log(img);
         }
       }
 
       var postNum = 20; // Specify the number of recent posts to compare from the logged in user's feed.
-      var bskyFeedAwait = await this.#agent.getAuthorFeed({actor: "notcanes.bsky.social", limit: postNum,}); // Get a defined number + 2 of most recent posts from the logged in user's feed.
+      var bskyFeedAwait = await this.userAgent.app.bsky.feed.getAuthorFeed({actor: "notcanes.bsky.social", limit: postNum,}); // Get a defined number + 2 of most recent posts from the logged in user's feed.
       var bskyFeed = bskyFeedAwait["data"]["feed"]; // Filter down the await values so we are only looking at the feeds.
       var bskyFeed0 = bskyFeed[0]; // Select post 0, the most recent post made by this user.
       var bskyPost0 = bskyFeed0["post"]; // Filter down the values of the post so we can look at the params.
@@ -261,7 +252,7 @@ export default class Bot
       if (typeof text === "string") // Check that text is a string (This should always be the case in this codebase, but it seems to break if I get rid of the option for it to not be.)
       {
         const richText = new RichText({text}); // Create a new RichText object from our text string. Sorta arcane object type detailed in ATProto API.
-        await richText.detectFacets(this.#agent); // Detect facets from the agent.
+        await richText.detectFacets(this.userAgent); // Detect facets from the agent.
         var record; // Create empty record variable that we will put our post details into.
         if (isReply == true) // If we are trying to post a reply
         {
@@ -332,11 +323,11 @@ export default class Bot
             }; 
           }
         }
-        return this.#agent.post(record); // Post the record we have specified using the Bluesky agent, return the output from doing this.
+        return this.userAgent.post(record); // Post the record we have specified using the Bluesky agent, return the output from doing this.
       }
       else // If we are trying to post text not in the format of a string. Shouldn't happen in this unmodified codebase, I don't think
       {
-        return this.#agent.post(text); // Post the raw text value using the Bluesky agent, return the output from doing this.
+        return this.userAgent.post(text); // Post the raw text value using the Bluesky agent, return the output from doing this.
       }
     }
   }
