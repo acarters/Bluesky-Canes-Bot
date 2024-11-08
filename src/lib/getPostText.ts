@@ -1,10 +1,12 @@
 import * as Mastodon from 'tsl-mastodon-api';
-const mastodon = new Mastodon.API({access_token: 'PRZhmwmS5fpkXo442UE8SGHv8TL7XOiqjhpOh49heb0', api_url: 'https://mastodon.social/api/v1/'}); // access the Mastodon API using the access token.
+import { sourceMastodonAccount, sourceMastodonId, bskyAccount, giveawayStrings } from "./config.js";
+
+const mastodon = new Mastodon.API({ access_token: "", api_url: "https://mastodon.social/api/v1/"})
 
 /*
 	getPostText():
 
-	This function performs a Mastodon API GET request to get the n most recent tweets created by Walt Ruff. Using this, the function formats these strings down into the desired plaintext of a Bluesky post, stripping out all of the unnecessary HTML tag notation and handling formatting such that the text is compatible with Bluesky.
+	This function performs a Mastodon API GET request to get the n most recent tweets created by the target account. Using this, the function formats these strings down into the desired plaintext of a Bluesky post, stripping out all of the unnecessary HTML tag notation and handling formatting such that the text is compatible with Bluesky.
 
 	args: None
 
@@ -19,13 +21,11 @@ export default async function getPostText()
 	var andReg = new RegExp("&amp;", "g"); // A regex to deal with &amp;. This should be replaced with &.
 	var logoReg = new RegExp("&nbsp;", "g"); // A regex to deal with &nbsp;. Should be deleted.
 	var twitterReg = new RegExp("@twitter.com", "g"); // A regex to deal with @twitter.com. Should be deleted.
-	var sportsBotsReg = new RegExp("@sportsbots.xyz", "g");
-	var waltRuffReg = new RegExp("@WaltRuff@sportsbots.xyz", "g"); // A regex to deal with Walt Ruff's @. Should be replaced with the bot's @.
-	var sportsBotsReg = new RegExp("@sportsbots.xyz", "g");
+	var accountReg = new RegExp(sourceMastodonAccount, "g"); // A regex to deal with the source account's @. Should be replaced with the bot's @.
+	var serverReg = new RegExp("@" + sourceMastodonAccount.split("@")[2], "g");
 	var tagReg = new RegExp("<(:?[^>]+)>", "g"); // A general regex for HTML. Used to get the plaintext value of the mastodon post without tag notation.
 	var invalidLinkReg = new RegExp("\\S*(\\.com|\\.ca|\\.org|\\.net)\\S*(…|\\.\\.\\.)", "g");
-
-	var awaitTweet = await mastodon.getStatuses("109705347025889119", {'limit':limitVal}); //Use the Mastodon API to get a specified number of recent posts from the Mastodon API.
+	var awaitTweet = await mastodon.getStatuses(sourceMastodonId, {'limit':limitVal}); //Use the Mastodon API to get a specified number of recent posts from the Mastodon API.
 	var string = JSON.stringify(awaitTweet); // Convert the post into a JSON string.
 	var objJSON = JSON.parse(string)["json"]; // Convert the JSON string back to a JSON object. Kinda silly, but it doesn't work otherwise. 
 	var stringArr = []; // Initialize an empty array that we will store the regexed plaintexts in.
@@ -75,11 +75,15 @@ export default async function getPostText()
 		var contentJSON = objJSON[i]["content"]; // Filter through all the values of the JSON object, to get just the content of post i. 
 		var contentString = JSON.stringify(contentJSON); // Convert the content of the post into a JSON string.
 		contentString = contentString.slice(1,-1); // Remove the quotation marks.
-		contentString = contentString.replace(twitterReg, "").replace(waltRuffReg, "notwaltruff.bsky.social").replace(sportsBotsReg, "").replace(logoReg, "").replace(quoteReg, `"`).replace(andReg, "&").replace(pReg, "\n\n").replace(brReg, "\n").replace(tagReg, ""); //Use the ", &, <p>, and <br> regexes to apply appropriate formatting. Then use the general regex to remove the HTML formatting from the mastodon post. 
+		contentString = contentString.replace(twitterReg, "").replace(accountReg, bskyAccount.identifier).replace(serverReg, "").replace(logoReg, "").replace(quoteReg, `"`).replace(andReg, "&").replace(pReg, "\n\n").replace(brReg, "\n").replace(tagReg, ""); //Use the ", &, <p>, and <br> regexes to apply appropriate formatting. Then use the general regex to remove the HTML formatting from the mastodon post.
 
-		if (contentString.includes("GreatClips") || contentString.includes("HarrisTeeter") || contentString.includes("RT ") || contentString.includes("Retweet ") || contentString.includes("retweet ") || contentString.includes("RETWEET "))
+		for (const giveawayString of giveawayStrings)
 		{
-			contentString = contentString + "\n\n (Offer not valid on Bluesky.)";
+			if (giveawayString != "" && contentString.toUpperCase().includes(giveawayString.toUpperCase()))
+			{
+				contentString = contentString + "\n\n (Offer not valid on Bluesky.)";
+				break;
+			}
 		}
 
 		if (objJSON[i]["card"] != null)
