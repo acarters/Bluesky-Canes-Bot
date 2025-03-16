@@ -146,7 +146,7 @@ export default class Bot
     const limitsResponse = await axios.get(limitsUrl, {headers: {'Authorization': `Bearer ${token}`}});
     const limits = limitsResponse.data;
 
-    if (urls[0].slice(-3) == "mp4" && parseFloat(alts[0].split("@#*")[2]) < 60 && limits.canUpload == true)
+    if (urls[0].slice(-3) == "mp4" && parseFloat(alts[0].split("@#*")[2]) < 180 && limits.canUpload == true)
     {
       await this.postVideo(false, urls[0], alts[0], text);
       return 37;
